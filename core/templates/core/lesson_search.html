@@ -1,0 +1,126 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Buscar Aulas - Dyschool{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Buscar Aulas</h1>
+        <p>Encontre professores que atendam às suas necessidades</p>
+    </div>
+
+    <div class="search-container">
+        <form method="get" class="search-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Especialidade:</label>
+                    {{ form.specialization }}
+                </div>
+                
+                <div class="form-group">
+                    <label>Tema da Aula:</label>
+                    {{ form.lesson_topic }}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Valor Máximo por Hora (R$):</label>
+                    {{ form.max_hourly_rate }}
+                </div>
+                
+                <div class="form-group">
+                    <label>Duração da Aula (minutos):</label>
+                    {{ form.lesson_duration }}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Buscar Professores</button>
+                <a href="{% url 'lesson_search' %}" class="btn btn-secondary">Limpar</a>
+            </div>
+        </form>
+    </div>
+
+    {% if teachers %}
+        <div class="results-container">
+            <h2>Professores Encontrados ({{ teachers|length }})</h2>
+            
+            <div class="teachers-grid">
+                {% for teacher in teachers %}
+                    <div class="teacher-card">
+                        <div class="teacher-header">
+                            {% if teacher.profile_picture %}
+                                <img src="{{ teacher.profile_picture.url }}" alt="{{ teacher.get_full_name }}" class="teacher-avatar">
+                            {% else %}
+                                <div class="teacher-avatar-placeholder">
+                                    {{ teacher.first_name|first }}{{ teacher.last_name|first }}
+                                </div>
+                            {% endif %}
+                            <div class="teacher-info">
+                                <h3>{{ teacher.get_full_name }}</h3>
+                                <p class="teacher-specializations">
+                                    {% for specialization in teacher.teacher_profile.specializations.all %}
+                                        <span class="specialization-tag">{{ specialization.name }}</span>
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="teacher-details">
+                            <div class="detail-item">
+                                <strong>Valor por Hora:</strong> R$ {{ teacher.teacher_profile.hourly_rate }}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Experiência:</strong> {{ teacher.teacher_profile.experience_years }} anos
+                            </div>
+                            <div class="detail-item">
+                                <strong>Sobre:</strong>
+                                <p>{{ teacher.teacher_profile.about|truncatewords:20 }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="teacher-actions">
+                            <a href="{% url 'lesson_request' teacher.id %}" class="btn btn-primary">Solicitar Aula</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% elif request.GET %}
+        <div class="no-results">
+            <h2>Nenhum professor encontrado</h2>
+            <p>Tente ajustar os critérios de busca ou entre em contato conosco.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const specializationSelect = document.getElementById('id_specialization');
+    const lessonTopicSelect = document.getElementById('id_lesson_topic');
+    
+    specializationSelect.addEventListener('change', function() {
+        const specializationId = this.value;
+        
+        // Clear lesson topic selection
+        lessonTopicSelect.innerHTML = '<option value="">Select lesson topic</option>';
+        
+        if (specializationId) {
+            fetch(`{% url 'get_lesson_topics' %}?specialization_id=${specializationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.lesson_topics.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic.id;
+                        option.textContent = topic.name;
+                        lessonTopicSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+});
+</script>
+{% endblock %} 

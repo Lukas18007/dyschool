@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Enviar Disponibilidade - Dyschool{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Enviar Disponibilidade</h1>
+        <p>Envie sua disponibilidade para a solicitação de aula</p>
+    </div>
+
+    <div class="lesson-request-card">
+        <h3>Solicitação de Aula</h3>
+        <div class="request-details">
+            <p><strong>Aluno:</strong> {{ lesson_request.student.get_full_name }}</p>
+            <p><strong>Tema:</strong> {{ lesson_request.lesson_topic.name }}</p>
+            <p><strong>Duração Solicitada:</strong> {{ lesson_request.lesson_duration }} minutos</p>
+            <p><strong>Valor Máximo:</strong> R$ {{ lesson_request.max_hourly_rate }}</p>
+            {% if lesson_request.additional_notes %}
+                <p><strong>Observações:</strong> {{ lesson_request.additional_notes }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>Sua Disponibilidade</h3>
+                
+                <div class="form-group">
+                    <label>Data:</label>
+                    {{ form.available_date }}
+                    {% if form.available_date.errors %}
+                        <div class="form-error">{{ form.available_date.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Horário:</label>
+                    {{ form.available_time }}
+                    {% if form.available_time.errors %}
+                        <div class="form-error">{{ form.available_time.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Duração (minutos):</label>
+                    {{ form.duration }}
+                    {% if form.duration.errors %}
+                        <div class="form-error">{{ form.duration.errors }}</div>
+                    {% endif %}
+                    <small>Entre 30 e 180 minutos</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar Disponibilidade</button>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

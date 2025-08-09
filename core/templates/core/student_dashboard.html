@@ -1,0 +1,116 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard do Aluno - Dyschool{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Dashboard do Aluno</h1>
+        <p>Acompanhe suas solicitações de aula e disponibilidades dos professores</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Quick Actions -->
+        <div class="dashboard-card">
+            <h3>Ações Rápidas</h3>
+            <div class="quick-actions">
+                <a href="{% url 'lesson_search' %}" class="btn btn-primary">Buscar Professores</a>
+                <p>Encontre professores que atendam às suas necessidades</p>
+            </div>
+        </div>
+
+        <!-- My Lesson Requests -->
+        <div class="dashboard-card">
+            <h3>Minhas Solicitações ({{ lesson_requests|length }})</h3>
+            {% if lesson_requests %}
+                <div class="requests-list">
+                    {% for request in lesson_requests %}
+                        <div class="request-item">
+                            <div class="request-header">
+                                <h4>{{ request.lesson_topic.name }}</h4>
+                                <span class="request-status status-{{ request.status }}">{{ request.get_status_display }}</span>
+                            </div>
+                            <div class="request-details">
+                                <p><strong>Duração:</strong> {{ request.lesson_duration }} minutos</p>
+                                <p><strong>Valor Máximo:</strong> R$ {{ request.max_hourly_rate }}</p>
+                                <p><strong>Data da Solicitação:</strong> {{ request.created_at|date:"d/m/Y H:i" }}</p>
+                                {% if request.additional_notes %}
+                                    <p><strong>Observações:</strong> {{ request.additional_notes|truncatewords:10 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-data">Você ainda não fez nenhuma solicitação de aula</p>
+                <a href="{% url 'lesson_search' %}" class="btn btn-primary">Fazer Primeira Solicitação</a>
+            {% endif %}
+        </div>
+
+        <!-- Teacher Availabilities -->
+        <div class="dashboard-card">
+            <h3>Disponibilidades dos Professores ({{ availabilities|length }})</h3>
+            {% if availabilities %}
+                <div class="availabilities-list">
+                    {% for availability in availabilities %}
+                        <div class="availability-item {% if availability.is_accepted %}accepted{% endif %}">
+                            <div class="availability-header">
+                                <h4>{{ availability.teacher.get_full_name }}</h4>
+                                <span class="availability-status">
+                                    {% if availability.is_accepted %}
+                                        <span class="status-accepted">Aceita</span>
+                                    {% else %}
+                                        <span class="status-pending">Pendente</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="availability-details">
+                                <p><strong>Tema:</strong> {{ availability.lesson_request.lesson_topic.name }}</p>
+                                <p><strong>Data:</strong> {{ availability.available_date|date:"d/m/Y" }}</p>
+                                <p><strong>Horário:</strong> {{ availability.available_time|time:"H:i" }}</p>
+                                <p><strong>Duração:</strong> {{ availability.duration }} minutos</p>
+                                <p><strong>Valor por Hora:</strong> R$ {{ availability.teacher.teacher_profile.hourly_rate }}</p>
+                            </div>
+                            {% if not availability.is_accepted %}
+                                <div class="availability-actions">
+                                    <a href="{% url 'accept_availability' availability.id %}" class="btn btn-success">Aceitar</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="no-data">Nenhuma disponibilidade recebida ainda</p>
+            {% endif %}
+        </div>
+
+        <!-- My Bookings -->
+        <div class="dashboard-card">
+            <h3>Minhas Aulas Confirmadas</h3>
+            {% if lesson_requests %}
+                {% for request in lesson_requests %}
+                    {% if request.status == 'matched' %}
+                        {% for booking in request.bookings.all %}
+                            <div class="booking-item">
+                                <div class="booking-header">
+                                    <h4>{{ booking.teacher.get_full_name }}</h4>
+                                    <span class="booking-status status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                                </div>
+                                <div class="booking-details">
+                                    <p><strong>Tema:</strong> {{ booking.lesson_request.lesson_topic.name }}</p>
+                                    <p><strong>Data:</strong> {{ booking.teacher_availability.available_date|date:"d/m/Y" }}</p>
+                                    <p><strong>Horário:</strong> {{ booking.teacher_availability.available_time|time:"H:i" }}</p>
+                                    <p><strong>Duração:</strong> {{ booking.teacher_availability.duration }} minutos</p>
+                                    <p><strong>Valor:</strong> R$ {{ booking.teacher.teacher_profile.hourly_rate }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p class="no-data">Nenhuma aula confirmada ainda</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

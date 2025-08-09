@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Perfil do Professor - Dyschool{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Perfil do Professor</h1>
+        <p>Configure seu perfil para que os alunos possam encontrá-lo</p>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>Especialidades</h3>
+                <div class="form-group">
+                    <label>Especialidades:</label>
+                    {{ form.specializations }}
+                    {% if form.specializations.errors %}
+                        <div class="form-error">{{ form.specializations.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Temas de Aula:</label>
+                    {{ form.lesson_topics }}
+                    {% if form.lesson_topics.errors %}
+                        <div class="form-error">{{ form.lesson_topics.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Informações de Ensino</h3>
+                <div class="form-group">
+                    <label>Valor por Hora (R$):</label>
+                    {{ form.hourly_rate }}
+                    {% if form.hourly_rate.errors %}
+                        <div class="form-error">{{ form.hourly_rate.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Anos de Experiência:</label>
+                    {{ form.experience_years }}
+                    {% if form.experience_years.errors %}
+                        <div class="form-error">{{ form.experience_years.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Sobre Você</h3>
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    {{ form.about }}
+                    {% if form.about.errors %}
+                        <div class="form-error">{{ form.about.errors }}</div>
+                    {% endif %}
+                    <small>Conte sobre sua experiência de ensino, metodologia e abordagem</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar Perfil</button>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update lesson topics when specializations change
+    const specializationCheckboxes = document.querySelectorAll('input[name="specializations"]');
+    const lessonTopicContainer = document.querySelector('input[name="lesson_topics"]').closest('.form-group');
+    
+    function updateLessonTopics() {
+        const selectedSpecializations = Array.from(specializationCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        
+        if (selectedSpecializations.length > 0) {
+            fetch(`{% url 'get_lesson_topics' %}?specialization_id=${selectedSpecializations.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update lesson topics options
+                    const lessonTopicCheckboxes = lessonTopicContainer.querySelectorAll('input[type="checkbox"]');
+                    lessonTopicCheckboxes.forEach(cb => {
+                        const topicId = cb.value;
+                        const isAvailable = data.lesson_topics.some(topic => topic.id == topicId);
+                        cb.disabled = !isAvailable;
+                        cb.checked = isAvailable && cb.checked;
+                    });
+                });
+        }
+    }
+    
+    specializationCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateLessonTopics);
+    });
+});
+</script>
+{% endblock %} 

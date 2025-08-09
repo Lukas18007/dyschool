@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Solicitar Aula - Dyschool{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Solicitar Aula</h1>
+        <p>Solicite uma aula com {{ teacher.get_full_name }}</p>
+    </div>
+
+    <div class="teacher-info-card">
+        <div class="teacher-header">
+            {% if teacher.profile_picture %}
+                <img src="{{ teacher.profile_picture.url }}" alt="{{ teacher.get_full_name }}" class="teacher-avatar">
+            {% else %}
+                <div class="teacher-avatar-placeholder">
+                    {{ teacher.first_name|first }}{{ teacher.last_name|first }}
+                </div>
+            {% endif %}
+            <div class="teacher-info">
+                <h3>{{ teacher.get_full_name }}</h3>
+                <p class="teacher-specializations">
+                    {% for specialization in teacher.teacher_profile.specializations.all %}
+                        <span class="specialization-tag">{{ specialization.name }}</span>
+                    {% endfor %}
+                </p>
+                <p><strong>Valor por Hora:</strong> R$ {{ teacher.teacher_profile.hourly_rate }}</p>
+                <p><strong>Experiência:</strong> {{ teacher.teacher_profile.experience_years }} anos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="form">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>Detalhes da Aula</h3>
+                
+                <div class="form-group">
+                    <label>Tema da Aula:</label>
+                    {{ form.lesson_topic }}
+                    {% if form.lesson_topic.errors %}
+                        <div class="form-error">{{ form.lesson_topic.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Duração da Aula (minutos):</label>
+                    {{ form.lesson_duration }}
+                    {% if form.lesson_duration.errors %}
+                        <div class="form-error">{{ form.lesson_duration.errors }}</div>
+                    {% endif %}
+                    <small>Entre 30 e 180 minutos</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Valor Máximo por Hora (R$):</label>
+                    {{ form.max_hourly_rate }}
+                    {% if form.max_hourly_rate.errors %}
+                        <div class="form-error">{{ form.max_hourly_rate.errors }}</div>
+                    {% endif %}
+                    <small>O professor cobra R$ {{ teacher.teacher_profile.hourly_rate }} por hora</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Observações Adicionais</h3>
+                <div class="form-group">
+                    <label>Observações:</label>
+                    {{ form.additional_notes }}
+                    {% if form.additional_notes.errors %}
+                        <div class="form-error">{{ form.additional_notes.errors }}</div>
+                    {% endif %}
+                    <small>Conte sobre seus objetivos, nível de experiência ou qualquer outra informação relevante</small>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar Solicitação</button>
+                <a href="{% url 'lesson_search' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 
